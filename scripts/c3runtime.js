@@ -4077,6 +4077,7 @@ self.C3_GetObjectRefTable = function () {
 		C3.Plugins.UserMedia.Acts.RequestMic,
 		C3.Plugins.UserMedia.Exps.AudioSourceLabelAt,
 		C3.Plugins.System.Cnds.Else,
+		C3.Plugins.Audio.Acts.AddMuteEffect,
 		C3.Plugins.UserMedia.Cnds.OnApproved,
 		C3.Plugins.UserMedia.Cnds.OnDeclined,
 		C3.Plugins.Touch.Cnds.OnTapGestureObject,
