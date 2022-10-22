@@ -3813,89 +3813,6 @@ SetWebFont(familyName,cssUrl){console.warn("[Text] 'Set web font' action is depr
 }
 
 {
-'use strict';{const C3=self.C3;const DOM_COMPONENT_ID="user-media";C3.Plugins.UserMedia=class UserMediaPlugin extends C3.SDKDOMPluginBase{constructor(opts){super(opts,DOM_COMPONENT_ID);this._lastStateSequenceNumber=-1;this._videoState=new Map;this.AddElementMessageHandler("video-ready",(sdkInst,e)=>sdkInst._OnVideoReady(e));this._runtime.AddDOMComponentMessageHandler(DOM_COMPONENT_ID,"state",e=>this._OnUpdateState(e))}Release(){super.Release()}_OnUpdateState(stateData){const sequenceNumber=stateData["sequenceNumber"];
-if(sequenceNumber<=this._lastStateSequenceNumber)return;this._lastStateSequenceNumber=sequenceNumber;this._videoState.clear();for(const [idStr,o]of Object.entries(stateData["videoData"]))this._videoState.set(parseInt(idStr,10),o)}_DeleteVideoState(elementId){this._videoState.delete(elementId)}GetVideoState(elementId){return this._videoState.get(elementId)||null}}}{const C3=self.C3;C3.Plugins.UserMedia.Type=class UserMediaType extends C3.SDKTypeBase{constructor(objectClass){super(objectClass)}Release(){super.Release()}OnCreate(){}}}
-{const C3=self.C3;const DOM_COMPONENT_ID="user-media";const tempRect=C3.New(C3.Rect);const tempQuad=C3.New(C3.Quad);C3.Plugins.UserMedia.Instance=class UserMediaInstance extends C3.SDKDOMInstanceBase{constructor(inst,properties){super(inst,DOM_COMPONENT_ID);this._videoSources=[];this._audioSources=[];this._isRequesting=false;this._isVideoReady=false;this._isVideoActive=false;this._videoWidth=0;this._videoHeight=0;this._snapshotUrl="";const rt=this._runtime.Dispatcher();this._disposables=new C3.CompositeDisposable(C3.Disposable.From(rt,
-"webglcontextlost",()=>this._OnWebGLContextLost()));this.CreateElement();this._StartTicking()}Release(){this.GetPlugin()._DeleteVideoState(this.GetElementId());this._ReleaseTexture();super.Release()}_MaybeCreateTexture(renderer,w,h){if(this._webGLTexture)if(this._webGLTexture.GetWidth()===w||this._webGLTexture.GetHeight()===h)return;else this._ReleaseTexture();this._webGLTexture=renderer.CreateDynamicTexture(w,h,{sampling:this._runtime.GetSampling(),mipMap:false})}_ReleaseTexture(){if(!this._webGLTexture)return;
-this._runtime.GetRenderer().DeleteTexture(this._webGLTexture);this._webGLTexture=null}GetElementState(){return{}}_OnWebGLContextLost(){this._webGLTexture=null}_OnVideoReady(e){if(this._isVideoActive){this._isVideoReady=true;this._videoWidth=e["width"];this._videoHeight=e["height"]}}Draw(renderer){const wi=this.GetWorldInfo();renderer.SetColorFillMode();renderer.SetColorRgba(0,0,0,1);renderer.Quad(wi.GetBoundingQuad());renderer.SetTextureFillMode();renderer.ResetColor();if(!this._isVideoActive||!this._isVideoReady)return;
-let videoWidth=0;let videoHeight=0;let textureData=null;if(this._runtime.IsInWorker()){const state=this.GetMyState();if(!state)return;const imageBitmap=state["imageBitmap"];if(!imageBitmap)return;videoWidth=imageBitmap.width;videoHeight=imageBitmap.height;textureData=imageBitmap}else{const videoElem=self["C3UserMedia_GetVideoElement"](this.GetElementId());if(!videoElem)return;videoWidth=videoElem.videoWidth;videoHeight=videoElem.videoHeight;if(videoWidth<=0||videoHeight<=0)return;textureData=videoElem}this._MaybeCreateTexture(renderer,
-videoWidth,videoHeight);renderer.UpdateTexture(textureData,this._webGLTexture);const videoAspect=videoWidth/videoHeight;const dispWidth=wi.GetWidth();const dispHeight=wi.GetHeight();const dispAspect=dispWidth/dispHeight;let offX=0;let offY=0;let drawWidth=0;let drawHeight=0;if(dispAspect>videoAspect){drawWidth=dispHeight*videoAspect;drawHeight=dispHeight;offX=Math.max(Math.floor((dispWidth-drawWidth)/2),0)}else{drawWidth=dispWidth;drawHeight=dispWidth/videoAspect;offY=Math.max(Math.floor((dispHeight-
-drawHeight)/2),0)}renderer.SetTexture(this._webGLTexture);tempRect.setWH(wi.GetX()+offX,wi.GetY()+offY,drawWidth,drawHeight);tempQuad.setFromRect(tempRect);renderer.Quad(tempQuad)}Tick(){if(this._isVideoActive&&this._isVideoReady){this._runtime.UpdateRender();const state=this.GetMyState();if(state){this._videoWidth=state["width"];this._videoHeight=state["height"]}}}GetMyState(){return this.GetPlugin().GetVideoState(this.GetElementId())}}}
-{const C3=self.C3;C3.Plugins.UserMedia.Cnds={OnApproved(){return true},OnDeclined(){return true},OnMediaSources(){return true},OnSnapshot(){return true},SupportsUserMedia(){return true},SupportsSpeechRecognition(){return false},OnSpeechRecognitionStart(){return true},OnSpeechRecognitionEnd(){return true},OnSpeechRecognitionError(){return true},OnSpeechRecognitionResult(){return true},IsRecognisingSpeech(){return false},OnDeviceLight(){return true},SupportsSpeechSynthesis(){return false},IsSpeaking(){return false},
-OnCanvasRecordingReady(){return true},SupportsCanvasRecording(){return false},IsCanvasRecordFormatSupported(){return false}}}
-{const C3=self.C3;C3.Plugins.UserMedia.Acts={async RequestCamera(sourceIndex,preferredDirection,preferredWidth,preferredHeight,includeMic,micSourceIndex){if(this._isRequesting)return;this._isRequesting=true;sourceIndex=Math.floor(sourceIndex);preferredWidth=Math.floor(preferredWidth);preferredHeight=Math.floor(preferredHeight);const constraints={"video":{}};if(sourceIndex>=0&&sourceIndex<this._videoSources.length){const videoDeviceId=this._videoSources[sourceIndex]["deviceId"];if(videoDeviceId)constraints["video"]["deviceId"]=
-{"exact":videoDeviceId}}if(preferredDirection>0)constraints["video"]["facingMode"]={"ideal":preferredDirection===1?"user":"environment"};if(preferredWidth>0&&preferredHeight>0){constraints["video"]["width"]=preferredWidth;constraints["video"]["height"]=preferredHeight}if(includeMic){constraints["audio"]={};if(micSourceIndex>=0&&micSourceIndex<this._audioSources.length){const audioDeviceId=this._audioSources[micSourceIndex]["deviceId"];if(audioDeviceId)constraints["audio"]["deviceId"]={"exact":audioDeviceId}}}const result=
-await this.PostToDOMElementAsync("request-camera",{"constraints":constraints});this._isRequesting=false;if(result["ok"]){this._isVideoActive=true;this._isVideoReady=false;await this.TriggerAsync(C3.Plugins.UserMedia.Cnds.OnApproved)}else await this.TriggerAsync(C3.Plugins.UserMedia.Cnds.OnDeclined)},async RequestMic(tag,sourceIndex){if(this._isRequesting)return;this._isRequesting=true;sourceIndex=Math.floor(sourceIndex);const constraints={"audio":{}};if(sourceIndex>=0&&sourceIndex<this._audioSources.length){const audioDeviceId=
-this._audioSources[sourceIndex]["deviceId"];if(audioDeviceId)constraints["audio"]["deviceId"]={"exact":audioDeviceId}}const result=await this.PostToDOMElementAsync("request-microphone",{"constraints":constraints,"tag":tag});this._isRequesting=false;if(result["ok"])await this.TriggerAsync(C3.Plugins.UserMedia.Cnds.OnApproved);else await this.TriggerAsync(C3.Plugins.UserMedia.Cnds.OnDeclined)},Stop(){this._isVideoActive=false;this._isVideoReady=false;this._videoWidth=0;this._videoHeight=0;this.PostToDOMElement("stop");
-this._runtime.UpdateRender()},async Snapshot(format,quality){const result=await this.PostToDOMElementAsync("snapshot",{"format":format===0?"image/png":"image.jpeg","quality":quality/100});if(this._snapshotUrl)URL.revokeObjectURL(this._snapshotUrl);this._snapshotUrl=result["snapshotUrl"];await this.TriggerAsync(C3.Plugins.UserMedia.Cnds.OnSnapshot)},async GetMediaSources(){const result=await this.PostToDOMAsync("get-media-sources");this._videoSources=result["videoSources"];this._audioSources=result["audioSources"];
-await this.TriggerAsync(C3.Plugins.UserMedia.Cnds.OnMediaSources)},RequestSpeechRecognition(lang,mode,results){},StepSpeechRecognition(){},SpeakText(text,lang,uri,vol,rate,pitch){},StopSpeaking(){},PauseSpeaking(){},ResumeSpeaking(){},StartRecordingCanvas(){},StopRecordingCanvas(){}}}
-{const C3=self.C3;C3.Plugins.UserMedia.Exps={VideoWidth(){return this._videoWidth},VideoHeight(){return this._videoHeight},SnapshotURL(){return this._snapshotUrl},AudioSourceCount(){return this._audioSources.length},AudioSourceLabelAt(i){i=Math.floor(i);if(i<0||i>=this._audioSources.length)return"";return this._audioSources[i]["label"]},CameraSourceCount(){return this._videoSources.length},CameraSourceLabelAt(i){i=Math.floor(i);if(i<0||i>=this._videoSources.length)return"";return this._videoSources[i]["label"]},
-CameraSourceFacingAt(i){i=Math.floor(i);if(i<0||i>=this._videoSources.length)return"";return this._videoSources[i]["facing"]},FinalTranscript(){return""},InterimTranscript(){return""},SpeechError(){return""},AmbientLux(){return 0},VoiceCount(){return 0},VoiceNameAt(){return""},VoiceLangAt(){return""},VoiceURIAt(){return""},CanvasRecordingURL(){return""}}};
-
-}
-
-{
-'use strict';{const C3=self.C3;C3.Plugins.GameRecorder=class GameRecorderPlugin extends C3.SDKPluginBase{constructor(opts){super(opts)}Release(){super.Release()}}}{const C3=self.C3;C3.Plugins.GameRecorder.Type=class GameRecorderType extends C3.SDKTypeBase{constructor(objectClass){super(objectClass)}Release(){super.Release()}OnCreate(){}}}
-{const C3=self.C3;const DOM_COMPONENT_ID="game-recorder";C3.Plugins.GameRecorder.Instance=class GameRecorderInstance extends C3.SDKInstanceBase{constructor(inst,properties){super(inst,DOM_COMPONENT_ID);this._isSupported=false;this._isMediaRecorderSupported=false;this._isScreenRecordingSupported=false;this._supportedVideoFormats=[];this._supportedAudioFormats=[];this._isRecording=false;this._recordingUrl="";this._recordingType="";this.AddDOMMessageHandlers([["recording-ready",e=>this._OnRecordingReady(e)],
-["error",err=>this._OnError(err)],["screen-recording-stopped",()=>this._OnRecordingStopped()]]);this._runtime.AddLoadPromise(this.PostToDOMAsync("get-supported-formats").then(data=>{this._isSupported=data["isSupported"];this._isMediaRecorderSupported=data["isMediaRecorderSupported"];this._isScreenRecordingSupported=data["isScreenRecordingSupported"];this._supportedVideoFormats=data["supportedVideoFormats"];this._supportedAudioFormats=data["supportedAudioFormats"]}))}Release(){super.Release()}_GetVideoType(videoFormat){if(videoFormat===
-1)return this._supportedVideoFormats.at(-1);else if(videoFormat===2)return"video/webm;codecs=vp8";else if(videoFormat===3)return"video/webm;codecs=vp9";else if(videoFormat===4)return"video/mp4";else return""}_GetAudioType(audioFormat){if(audioFormat===1)return this._supportedAudioFormats.at(-1);else if(audioFormat===2)return"audio/ogg;codecs=opus";else if(audioFormat===3)return"audio/webm;codecs=opus";else if(audioFormat===4)return"audio/mp4";else return""}async _OnRecordingReady(e){this._recordingUrl=
-e["url"];await this.TriggerAsync(C3.Plugins.GameRecorder.Cnds.OnRecordingReady)}async _OnError(err){await this.TriggerAsync(C3.Plugins.GameRecorder.Cnds.OnRecordingError)}_OnRecordingStopped(){this._isRecording=false;this._StopTicking()}Tick(){this._runtime.UpdateRender()}GetDebuggerProperties(){const prefix="plugins.gamerecorder";return[{title:prefix+".name",properties:[{name:prefix+".debugger.supported-video-formats",value:this._supportedVideoFormats.join(", ")},{name:prefix+".debugger.supported-audio-formats",
-value:this._supportedAudioFormats.join(", ")},{name:prefix+".debugger.is-recording",value:this._isRecording}]}]}}}
-{const C3=self.C3;C3.Plugins.GameRecorder.Cnds={OnRecordingReady(){return true},OnRecordingError(){return true},SupportsRecording(){return this._isSupported},SupportsScreenRecording(){return this._isScreenRecordingSupported},IsVideoFormatSupported(format){if(format===0)return this._supportedVideoFormats.includes("video/webm;codecs=vp8");else if(format===1)return this._supportedVideoFormats.includes("video/webm;codecs=vp9");else if(format===2)return this._supportedVideoFormats.includes("video/mp4");
-else return false},IsAudioFormatSupported(format){if(format===0)return this._supportedAudioFormats.includes("audio/ogg;codecs=opus");else if(format===1)return this._supportedAudioFormats.includes("audio/webm;codecs=opus");else if(format===2)return this._supportedAudioFormats.includes("audio/mp4");else return false},IsRecording(){return this._isRecording}}}
-{const C3=self.C3;C3.Plugins.GameRecorder.Acts={StartRecording(videoFormat,framerate,audioFormat,quality){if(!this._isSupported||this._isRecording)return;const videoType=this._GetVideoType(videoFormat);const audioType=this._GetAudioType(audioFormat);if(!videoType&&!audioType)return;this._recordingType=videoType||audioType;this._isRecording=true;this._StartTicking();this.PostToDOM("start-recording",{"videoType":videoType,"audioType":audioType,"bitsPerSecond":quality*1E3,"framerate":framerate})},StartScreenRecording(videoFormat,
-audioFormat,quality){if(!this._isScreenRecordingSupported||this._isRecording)return;const videoType=this._GetVideoType(videoFormat);const audioType=this._GetAudioType(audioFormat);if(!videoType&&!audioType)return;this._recordingType=videoType||audioType;this._isRecording=true;this._PostToDOMMaybeSync("start-screen-recording",{"videoType":videoType,"audioType":audioType,"bitsPerSecond":quality*1E3})},StartUserMediaRecording(videoFormat,audioFormat,quality){if(!this._isMediaRecorderSupported||this._isRecording)return;
-const videoType=this._GetVideoType(videoFormat);const audioType=this._GetAudioType(audioFormat);if(!videoType&&!audioType)return;this._recordingType=videoType||audioType;this._isRecording=true;this.PostToDOM("start-user-media-recording",{"videoType":videoType,"audioType":audioType,"bitsPerSecond":quality*1E3})},StopRecording(){if(!this._isRecording)return;this._OnRecordingStopped();this.PostToDOM("stop-recording")}}}
-{const C3=self.C3;C3.Plugins.GameRecorder.Exps={RecordingURL(){return this._recordingUrl},RecordingType(){return this._recordingType},RecordingFileExtension(){const recordingType=this._recordingType;if(recordingType.startsWith("audio/ogg"))return".ogg";else if(recordingType.startsWith("audio/mp4"))return".m4a";else if(recordingType.startsWith("video/mp4"))return".mp4";else return".webm"}}};
-
-}
-
-{
-'use strict';{const C3=self.C3;C3.Plugins.Date=class DatePlugin extends C3.SDKPluginBase{constructor(opts){super(opts)}Release(){super.Release()}}}{const C3=self.C3;C3.Plugins.Date.Type=class DateType extends C3.SDKTypeBase{constructor(objectClass){super(objectClass)}Release(){super.Release()}OnCreate(){}}}{const C3=self.C3;C3.Plugins.Date.Instance=class DateInstance extends C3.SDKInstanceBase{constructor(inst,properties){super(inst)}}}
-{const C3=self.C3;const getters=[];getters[0]=[ts=>C3.Plugins.Date.Exps.GetYear(ts),ts=>C3.Plugins.Date.Exps.GetMonth(ts),ts=>C3.Plugins.Date.Exps.GetDate(ts),ts=>C3.Plugins.Date.Exps.GetDay(ts),ts=>C3.Plugins.Date.Exps.GetHours(ts),ts=>C3.Plugins.Date.Exps.GetMinutes(ts),ts=>C3.Plugins.Date.Exps.GetSeconds(ts),ts=>C3.Plugins.Date.Exps.GetMilliseconds(ts)];getters[1]=[ts=>C3.Plugins.Date.Exps.GetUTCYear(ts),ts=>C3.Plugins.Date.Exps.GetUTCMonth(ts),ts=>C3.Plugins.Date.Exps.GetUTCDate(ts),ts=>C3.Plugins.Date.Exps.GetUTCDay(ts),
-ts=>C3.Plugins.Date.Exps.GetUTCHours(ts),ts=>C3.Plugins.Date.Exps.GetUTCMinutes(ts),ts=>C3.Plugins.Date.Exps.GetUTCSeconds(ts),ts=>C3.Plugins.Date.Exps.GetUTCMilliseconds(ts)];const parse=dateString=>C3.Plugins.Date.Exps.Parse(dateString);C3.Plugins.Date.Cnds={CompareTimeStamps(first,cmp,second){return C3.compare(first,cmp,second)},CompareDateStrings(first,cmp,second){return C3.compare(parse(first),cmp,parse(second))},CompareTimestampParts(first,cmp,second,part){return C3.compare(getters[1][part](first),
-cmp,getters[1][part](second))},CompareDateStringParts(first,cmp,second,part,mode){return C3.compare(getters[mode][part](parse(first)),cmp,getters[mode][part](parse(second)))}}}{const C3=self.C3;C3.Plugins.Date.Acts={}}
-{const C3=self.C3;const getters=new Map;getters.set("local",new Map([["year",ts=>(new Date(ts)).getFullYear()],["month",ts=>(new Date(ts)).getMonth()],["date",ts=>(new Date(ts)).getDate()],["day",ts=>(new Date(ts)).getDay()],["hours",ts=>(new Date(ts)).getHours()],["minutes",ts=>(new Date(ts)).getMinutes()],["seconds",ts=>(new Date(ts)).getSeconds()],["milliseconds",ts=>(new Date(ts)).getMilliseconds()]]));getters.set("universal",new Map([["year",ts=>(new Date(ts)).getUTCFullYear()],["month",ts=>
-(new Date(ts)).getUTCMonth()],["date",ts=>(new Date(ts)).getUTCDate()],["day",ts=>(new Date(ts)).getUTCDay()],["hours",ts=>(new Date(ts)).getUTCHours()],["minutes",ts=>(new Date(ts)).getUTCMinutes()],["seconds",ts=>(new Date(ts)).getUTCSeconds()],["milliseconds",ts=>(new Date(ts)).getUTCMilliseconds()]]));const setters=new Map;setters.set("local",new Map([["year",(ts,year)=>(new Date(ts)).setFullYear(year)],["month",(ts,month)=>(new Date(ts)).setMonth(month)],["date",(ts,date)=>(new Date(ts)).setDate(date)],
-["hours",(ts,hours)=>(new Date(ts)).setHours(hours)],["minutes",(ts,minutes)=>(new Date(ts)).setMinutes(minutes)],["seconds",(ts,seconds)=>(new Date(ts)).setSeconds(seconds)],["milliseconds",(ts,milliseconds)=>(new Date(ts)).setMilliseconds(milliseconds)]]));setters.set("universal",new Map([["year",(ts,year)=>(new Date(ts)).setUTCFullYear(year)],["month",(ts,month)=>(new Date(ts)).setUTCMonth(month)],["date",(ts,date)=>(new Date(ts)).setUTCDate(date)],["hours",(ts,hours)=>(new Date(ts)).setUTCHours(hours)],
-["minutes",(ts,minutes)=>(new Date(ts)).setUTCMinutes(minutes)],["seconds",(ts,seconds)=>(new Date(ts)).setUTCSeconds(seconds)],["milliseconds",(ts,milliseconds)=>(new Date(ts)).setUTCMilliseconds(milliseconds)]]));C3.Plugins.Date.Exps={ToString(timeStamp){return(new Date(timeStamp)).toString()},ToDateString(timeStamp){return(new Date(timeStamp)).toDateString()},ToTimeString(timeStamp){return(new Date(timeStamp)).toTimeString()},ToLocaleString(timeStamp){return(new Date(timeStamp)).toLocaleString()},
-ToLocaleDateString(timeStamp){return(new Date(timeStamp)).toLocaleDateString()},ToLocaleTimeString(timeStamp){return(new Date(timeStamp)).toLocaleTimeString()},ToUTCString(timeStamp){return(new Date(timeStamp)).toUTCString()},Parse(dateString){return Date.parse(dateString)},Get(year,month,day,hours,minutes,seconds,milliseconds){return Date.UTC(year,month,day,hours,minutes,seconds,milliseconds)},Now(){return Date.now()},TimezoneOffset(){return(new Date(Date.now())).getTimezoneOffset()},GetYear(timeStamp){return getters.get("local").get("year")(timeStamp)},
-GetUTCYear(timeStamp){return getters.get("universal").get("year")(timeStamp)},GetMonth(timeStamp){return getters.get("local").get("month")(timeStamp)},GetUTCMonth(timeStamp){return getters.get("universal").get("month")(timeStamp)},GetDate(timeStamp){return getters.get("local").get("date")(timeStamp)},GetUTCDate(timeStamp){return getters.get("universal").get("date")(timeStamp)},GetDay(timeStamp){return getters.get("local").get("day")(timeStamp)},GetUTCDay(timeStamp){return getters.get("universal").get("day")(timeStamp)},
-GetHours(timeStamp){return getters.get("local").get("hours")(timeStamp)},GetUTCHours(timeStamp){return getters.get("universal").get("hours")(timeStamp)},GetMinutes(timeStamp){return getters.get("local").get("minutes")(timeStamp)},GetUTCMinutes(timeStamp){return getters.get("universal").get("minutes")(timeStamp)},GetSeconds(timeStamp){return getters.get("local").get("seconds")(timeStamp)},GetUTCSeconds(timeStamp){return getters.get("universal").get("seconds")(timeStamp)},GetMilliseconds(timeStamp){return getters.get("local").get("milliseconds")(timeStamp)},
-GetUTCMilliseconds(timeStamp){return getters.get("universal").get("milliseconds")(timeStamp)},ChangeYear(timeStamp,year){return setters.get("local").get("year")(timeStamp,year)},ChangeUTCYear(timeStamp,year){return setters.get("universal").get("year")(timeStamp,year)},ChangeMonth(timeStamp,month){return setters.get("local").get("month")(timeStamp,month)},ChangeUTCMonth(timeStamp,month){return setters.get("universal").get("month")(timeStamp,month)},ChangeDate(timeStamp,date){return setters.get("local").get("date")(timeStamp,
-date)},ChangeUTCDate(timeStamp,date){return setters.get("universal").get("date")(timeStamp,date)},ChangeDay(timeStamp,targetDay){const year=C3.Plugins.Date.Exps.GetYear(timeStamp);const month=C3.Plugins.Date.Exps.GetMonth(timeStamp);const date=C3.Plugins.Date.Exps.GetDate(timeStamp);const hours=C3.Plugins.Date.Exps.GetHours(timeStamp);const minutes=C3.Plugins.Date.Exps.GetMinutes(timeStamp);const seconds=C3.Plugins.Date.Exps.GetSeconds(timeStamp);const milliseconds=C3.Plugins.Date.Exps.GetMilliseconds(timeStamp);
-const currentDay=C3.Plugins.Date.Exps.GetDay(timeStamp);const distance=targetDay-currentDay;return(new Date(year,month,date+distance,hours,minutes,seconds,milliseconds)).getTime()},ChangeUTCDay(timeStamp,targetDay){const year=C3.Plugins.Date.Exps.GetUTCYear(timeStamp);const month=C3.Plugins.Date.Exps.GetUTCMonth(timeStamp);const date=C3.Plugins.Date.Exps.GetUTCDate(timeStamp);const hours=C3.Plugins.Date.Exps.GetUTCHours(timeStamp);const minutes=C3.Plugins.Date.Exps.GetUTCMinutes(timeStamp);const seconds=
-C3.Plugins.Date.Exps.GetUTCSeconds(timeStamp);const milliseconds=C3.Plugins.Date.Exps.GetUTCMilliseconds(timeStamp);const currentDay=C3.Plugins.Date.Exps.GetUTCDay(timeStamp);const distance=targetDay-currentDay;return C3.Plugins.Date.Exps.Get(year,month,date+distance,hours,minutes,seconds,milliseconds)},ChangeHours(timeStamp,hours){return setters.get("local").get("hours")(timeStamp,hours)},ChangeUTCHours(timeStamp,hours){return setters.get("universal").get("hours")(timeStamp,hours)},ChangeMinutes(timeStamp,
-minutes){return setters.get("local").get("minutes")(timeStamp,minutes)},ChangeUTCMinutes(timeStamp,minutes){return setters.get("universal").get("minutes")(timeStamp,minutes)},ChangeSeconds(timeStamp,seconds){return setters.get("local").get("seconds")(timeStamp,seconds)},ChangeUTCSeconds(timeStamp,seconds){return setters.get("universal").get("seconds")(timeStamp,seconds)},ChangeMilliseconds(timeStamp,milliseconds){return setters.get("local").get("milliseconds")(timeStamp,milliseconds)},ChangeUTCMilliseconds(timeStamp,
-milliseconds){return setters.get("universal").get("milliseconds")(timeStamp,milliseconds)},Difference(firstTimeStamp,secondTimeStamp){return secondTimeStamp-firstTimeStamp},ToTimerHours(milliseconds){return Math.trunc(C3.Plugins.Date.Exps.ToTotalHours(milliseconds))},ToTimerMinutes(milliseconds){return Math.trunc(C3.Plugins.Date.Exps.ToTotalMinutes(milliseconds))%60},ToTimerSeconds(milliseconds){return Math.trunc(C3.Plugins.Date.Exps.ToTotalSeconds(milliseconds))%60},ToTimerMilliseconds(milliseconds){return milliseconds%
-1E3},ToTotalHours(milliseconds){return milliseconds/(1E3*60*60)},ToTotalMinutes(milliseconds){return milliseconds/(1E3*60)},ToTotalSeconds(milliseconds){return milliseconds/1E3}}};
-
-}
-
-{
-'use strict';{const C3=self.C3;C3.Plugins.BinaryData=class BinaryDataPlugin extends C3.SDKPluginBase{constructor(opts){super(opts)}Release(){super.Release()}}}{const C3=self.C3;C3.Plugins.BinaryData.Type=class BinaryDataType extends C3.SDKTypeBase{constructor(objectClass){super(objectClass)}Release(){super.Release()}OnCreate(){}}}
-{const C3=self.C3;const C3X=self.C3X;const IInstance=self.IInstance;const BASE64_DICTIONARY="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";C3.Plugins.BinaryData.Instance=class BinaryDataInstance extends C3.SDKInstanceBase{constructor(inst,properties){super(inst);this._buffer=new ArrayBuffer(0);this._view=null;this._altView=null;this._littleEndian=properties[0]===0;this._blobURL=null;this._setters=[[1,(o,v)=>this._view.setInt8(o,v)],[1,(o,v)=>this._view.setUint8(o,v)],[2,(o,v)=>
-this._view.setInt16(o,v,this._littleEndian)],[2,(o,v)=>this._view.setUint16(o,v,this._littleEndian)],[4,(o,v)=>this._view.setInt32(o,v,this._littleEndian)],[4,(o,v)=>this._view.setUint32(o,v,this._littleEndian)],[4,(o,v)=>this._view.setFloat32(o,v,this._littleEndian)],[8,(o,v)=>this._view.setFloat64(o,v,this._littleEndian)]];this._getters=[[1,o=>this._view.getInt8(o)],[1,o=>this._view.getUint8(o)],[2,o=>this._view.getInt16(o,this._littleEndian)],[2,o=>this._view.getUint16(o,this._littleEndian)],[4,
-o=>this._view.getInt32(o,this._littleEndian)],[4,o=>this._view.getUint32(o,this._littleEndian)],[4,o=>this._view.getFloat32(o,this._littleEndian)],[8,o=>this._view.getFloat64(o,this._littleEndian)]];this._UpdateViews()}_CheckValidIndex(index,size){return index>=0&&index+size<=this.ByteLength()}_ClampToLength(value){const l=this.ByteLength();if(value<0)return 0;if(value>=l)return l;return value}_ClampToValidIndex(value){const l=this.ByteLength();if(value<0)return 0;if(value>l)return l;return value}ByteLength(){return this._buffer.byteLength}_UpdateViews(){const B=
-this._buffer;this._view=new DataView(B);this._altView=new Uint8Array(B)}_GetBinaryDataSdkInstance(objectClass){if(!objectClass)return null;const target=objectClass.GetFirstPicked(this._inst);if(!target)return null;return target.GetSdkInstance()}_Get(type,offset){const getter=this._getters[type][1];const size=this._getters[type][0];if(this._CheckValidIndex(offset,size))return getter(offset);return 0}_Set(type,offset,value){const setter=this._setters[type][1];const size=this._setters[type][0];if(this._CheckValidIndex(offset,
-size))setter(offset,value)}_ResizeBuffer(source,length){if(!(source instanceof ArrayBuffer))throw new TypeError("Source must be an instance of ArrayBuffer");if(length<=source.byteLength)return source.slice(0,length);const sourceView=new Uint8Array(source);const destView=new Uint8Array(new ArrayBuffer(length));destView.set(sourceView);return destView.buffer}SetArrayBufferCopy(viewOrBuffer){if(C3.WeakIsInstanceOf(viewOrBuffer,ArrayBuffer))this._buffer=viewOrBuffer.slice(0);else{C3.WeakRequireTypedArray(viewOrBuffer);
-const buffer=viewOrBuffer.buffer;const byteLength=viewOrBuffer.byteLength;const byteOffset=viewOrBuffer.byteOffset;this._buffer=buffer.slice(byteOffset,byteOffset+byteLength)}this._UpdateViews()}SetArrayBufferTransfer(buffer){C3.WeakRequireInstanceOf(buffer,ArrayBuffer);this._buffer=buffer;this._UpdateViews()}GetArrayBufferCopy(){return this._buffer.slice(0)}GetArrayBufferReadOnly(){return this._buffer}TypedArrayToString(typedArray,utfLabel){let decoder=new TextDecoder(utfLabel||"utf-8");return decoder.decode(typedArray)}StringToArrayBuffer(str){let encoder=
-new TextEncoder("utf-8");return encoder.encode(str).buffer}Uint8ArrayToBase64String(uint8array){const read=i=>i<length?uint8array[i]:(padding++,0);const length=uint8array.length;const mask=63;const output=[];let padding=0;let i=0;while(i<length){const chunk=(read(i++)<<16)+(read(i++)<<8)+read(i++);output.push(BASE64_DICTIONARY[chunk>>>18&mask],BASE64_DICTIONARY[chunk>>>12&mask],BASE64_DICTIONARY[chunk>>>6&mask],BASE64_DICTIONARY[chunk&mask])}i=output.length-padding;while(i<output.length)output[i++]=
-"=";return output.join("")}Base64StringToUint8Array(str){const paddingIndex=str.indexOf("=");const originalLength=str.length;const alignedLength=originalLength>>2<<2;const alignmentOffset=originalLength-alignedLength;const padding=paddingIndex>-1?originalLength-paddingIndex:0;if(padding>2)throw new Error("Invalid padding");const isLegacy=alignedLength===paddingIndex;let unpaddedLength=originalLength;if(isLegacy)unpaddedLength=alignedLength-padding;else if(alignmentOffset===0&&paddingIndex>-1)unpaddedLength-=
-padding;const outputLength=unpaddedLength*3>>2;const output=new Uint8Array(outputLength);let readIndex=0;let writeIndex=0;const read=()=>{if(readIndex>=unpaddedLength)return 0;const n=str.charCodeAt(readIndex++);if(n>64&&n<91)return n-65;if(n>96&&n<123)return n-71;if(n>47&&n<58)return n+4;if(n===43)return 62;if(n===47)return 63;if(n===61)return 0;throw new Error(`Invalid character at column ${readIndex-1}`);};const push=v=>writeIndex<outputLength&&(output[writeIndex++]=v);while(writeIndex<outputLength){const chunk=
-(read()<<18)+(read()<<12)+(read()<<6)+read();push(chunk>>>16&255);push(chunk>>>8&255);push(chunk&255)}return output}GetScriptInterfaceClass(){return self.IBinaryDataInstance}};const map=new WeakMap;self.IBinaryDataInstance=class IBinaryDataInstance extends IInstance{constructor(){super();map.set(this,IInstance._GetInitInst().GetSdkInstance())}setArrayBufferCopy(viewOrBuffer){if(!(viewOrBuffer instanceof ArrayBuffer)&&!C3.IsTypedArray(viewOrBuffer))throw new TypeError("invalid parameter");map.get(this).SetArrayBufferCopy(viewOrBuffer)}setArrayBufferTransfer(arrayBuffer){if(!(arrayBuffer instanceof
-ArrayBuffer))throw new TypeError("invalid parameter");map.get(this).SetArrayBufferTransfer(arrayBuffer)}getArrayBufferCopy(){return map.get(this).GetArrayBufferCopy()}getArrayBufferReadOnly(){return map.get(this).GetArrayBufferReadOnly()}}}{const C3=self.C3;C3.Plugins.BinaryData.Cnds={CompareLength(operator,length){return C3.compare(this.ByteLength(),operator,length)},CompareValue(type,offset,operator,value){return C3.compare(this._Get(type,offset),operator,value)}}}
-{const C3=self.C3;C3.Plugins.BinaryData.Acts={SetEndian(b){this._littleEndian=b===0},SetLength(byteLength){this._buffer=this._ResizeBuffer(this._buffer,byteLength);this._UpdateViews()},SetFromBase64(str){try{const view=this.Base64StringToUint8Array(str);this.SetArrayBufferTransfer(view.buffer)}catch(err){console.warn("[BinaryData] Invalid base64 string: ",err)}},SetFromBinaryData(objectClass){const otherSdkInst=this._GetBinaryDataSdkInstance(objectClass);if(otherSdkInst===null)return;const buffer=
-otherSdkInst.GetArrayBufferCopy();this.SetArrayBufferTransfer(buffer)},SetFromText(str){const arrayBuffer=this.StringToArrayBuffer(str);this.SetArrayBufferTransfer(arrayBuffer)},Fill(type,value,offset,length){const setter=this._setters[type][1];const size=this._setters[type][0];const start=this._ClampToLength(offset);let end=0;if(length===-1)end==this.ByteLength();else end=this._ClampToLength(start+length);if(end<=start)return;const correctedLength=Math.floor((end-start)/size)*size;end=start+correctedLength;
-for(let i=start;i<end;i+=size)setter(i,value)},Copy(objectClass,start,length,target){const otherSdkInst=this._GetBinaryDataSdkInstance(objectClass);if(otherSdkInst===null)return;target=this._ClampToValidIndex(target);start=otherSdkInst._ClampToLength(start);let end;if(length===-1)end=otherSdkInst.ByteLength();else end=otherSdkInst._ClampToLength(start+length);if(end<=start)return;const selfSize=this.ByteLength();if(target+end-start>selfSize){const capacity=selfSize-target;end=start+capacity;if(end<=
-start)return}if(otherSdkInst===this)this._altView.copyWithin(target,start,end);else{const sourceBuffer=otherSdkInst.GetArrayBufferReadOnly();const slicedView=new Uint8Array(sourceBuffer,start,end-start);this._altView.set(slicedView,target)}},SetValue(type,value,offset){this._Set(type,offset,value)}}}
-{const C3=self.C3;const T={int8:0,uint8:1,int16:2,uint16:3,int32:4,uint32:5,float32:6,float64:7};C3.Plugins.BinaryData.Exps={GetURL(){if(this._blobURL!==null)URL.revokeObjectURL(this._blobURL);const blob=new Blob([this._altView],{type:""});const url=URL.createObjectURL(blob);this._blobURL=url;return url},GetBase64(){return this.Uint8ArrayToBase64String(this._altView)},ByteLength(){return this.ByteLength()},GetInt8(offset){return this._Get(T.int8,offset)},GetUint8(offset){return this._Get(T.uint8,
-offset)},GetInt16(offset){return this._Get(T.int16,offset)},GetUint16(offset){return this._Get(T.uint16,offset)},GetInt32(offset){return this._Get(T.int32,offset)},GetUint32(offset){return this._Get(T.uint32,offset)},GetFloat32(offset){return this._Get(T.float32,offset)},GetFloat64(offset){return this._Get(T.float64,offset)},GetText(offset,length){let result="";if(this._CheckValidIndex(offset,length)){const view=this._altView.subarray(offset,offset+length);try{result=this.TypedArrayToString(view)}catch(e){console.warn("Failed to decode text",
-e)}}return result}}};
-
-}
-
-{
 'use strict';{const C3=self.C3;C3.Plugins.AJAX=class AJAXPlugin extends C3.SDKPluginBase{constructor(opts){super(opts)}Release(){super.Release()}}}{const C3=self.C3;C3.Plugins.AJAX.Type=class AJAXType extends C3.SDKTypeBase{constructor(objectClass){super(objectClass)}Release(){super.Release()}OnCreate(){}}}
 {const C3=self.C3;C3.Plugins.AJAX.Instance=class AJAXInstance extends C3.SDKInstanceBase{constructor(inst,properties){super(inst);this._lastData="";this._curTag="";this._progress=0;this._timeout=-1;this._nextRequestHeaders=new Map;this._nextReponseBinaryData=null;this._nextRequestOverrideMimeType="";this._nwjsFs=null;this._nwjsPath=null;this._nwjsAppFolder=null;this._isNWjs=this._runtime.GetExportType()==="nwjs";if(this._isNWjs){this._nwjsFs=require("fs");this._nwjsPath=require("path");const process=
 self["process"]||nw["process"];this._nwjsAppFolder=this._nwjsPath["dirname"](process["execPath"])+"\\"}}Release(){super.Release()}async _TriggerError(tag,url,err){console.error(`[Construct] AJAX request to '${url}' (tag '${tag}') failed: `,err);this._curTag=tag;await this.TriggerAsync(C3.Plugins.AJAX.Cnds.OnAnyError);await this.TriggerAsync(C3.Plugins.AJAX.Cnds.OnError)}async _TriggerComplete(tag){this._curTag=tag;await this.TriggerAsync(C3.Plugins.AJAX.Cnds.OnAnyComplete);await this.TriggerAsync(C3.Plugins.AJAX.Cnds.OnComplete)}async _OnProgress(tag,
@@ -3913,29 +3830,40 @@ url,method,buffer)},SetTimeout(t){this._timeout=t*1E3},SetHeader(n,v){this._next
 }
 
 {
-'use strict';{const C3=self.C3;C3.Plugins.Json=class JSONPlugin extends C3.SDKPluginBase{constructor(opts){super(opts)}Release(){super.Release()}}}{const C3=self.C3;C3.Plugins.Json.Type=class JSONType extends C3.SDKTypeBase{constructor(objectClass){super(objectClass)}Release(){super.Release()}OnCreate(){}}}
-{const C3=self.C3;const C3X=self.C3X;const IInstance=self.IInstance;C3.Plugins.Json.Instance=class JSONInstance extends C3.SDKInstanceBase{constructor(inst,properties){super(inst);this._valueCache=[null,null];this._locationCache=[null,null];this._data={};this._path=[];this._currentKey="";this._currentValue=0}Release(){super.Release()}_InvalidateValueCache(){this._valueCache[0]=null;this._valueCache[1]=null}_HasValueCache(arr,isMutate){const cacheArr=this._valueCache[0];if(arr===null||cacheArr===null)return false;
-if(cacheArr===arr||C3.arraysEqual(cacheArr,arr))return true;if(isMutate&&cacheArr.length>0){for(let i=0,len=Math.min(arr.length,cacheArr.length);i<len;++i)if(arr[i]!==cacheArr[i])return false;return true}else return false}_GetValueCache(){return this._valueCache[1]}_UpdateValueCache(arr,value){this._valueCache[0]=arr;this._valueCache[1]=value}_InvalidateLocationCache(){this._locationCache[0]=null;this._locationCache[1]=null}_HasLocationCache(str){return this._locationCache[0]===str}_GetLocationCache(){return this._locationCache[1]}_UpdateLocationCache(str,
-value){this._locationCache[0]=str;this._locationCache[1]=value}_SetData(obj){this._data=obj;this._InvalidateValueCache();this._SetPath("")}_GetData(){return this._data}_SetPath(str){this._path=this._ParsePathUnsafe(str);this._InvalidateLocationCache()}_ParsePath(str){return C3.cloneArray(this._ParsePathUnsafe(str))}_ParsePathUnsafe(str){const buffer=[];let escaped=false;let parts;if(this._HasLocationCache(str))return this._GetLocationCache();if(str[0]==="."){parts=C3.cloneArray(this._path);str=str.slice(1)}else parts=
-[];for(const c of str)if(escaped){buffer.push(c);escaped=false}else if(c==="\\")escaped=true;else if(c==="."){parts.push(buffer.join(""));C3.clearArray(buffer)}else buffer.push(c);if(buffer.length!==0)parts.push(buffer.join(""));this._UpdateLocationCache(str,parts);return parts}_GetValueAtFullPath(path,lazyCreate){if(this._HasValueCache(path,false))return this._GetValueCache();let result=this._data;for(const part of path)if(Array.isArray(result)){const index=parseInt(part,10);if(index<0||index>=result.length||
-!isFinite(index)){result=null;break}result=result[index]}else if(typeof result==="object"&&result!==null)if(result.hasOwnProperty(part))result=result[part];else if(lazyCreate){const o={};result[part]=o;result=o}else{result=null;break}else{result=null;break}this._UpdateValueCache(path,result);return result}_GetValue(str){const path=this._ParsePath(str);if(!path.length)return this._data;const key=path.pop();const obj=this._GetValueAtFullPath(path,false);if(Array.isArray(obj)){const index=parseInt(key,
-10);return index>=0&&index<obj.length?obj[index]:null}else if(typeof obj==="object"&&obj!==null)return obj.hasOwnProperty(key)?obj[key]:null;else return null}_JSONTypeOf(val){if(val===null)return"null";else if(Array.isArray(val))return"array";else return typeof val}_GetTypeOf(str){const val=this._GetValue(str);return this._JSONTypeOf(val)}_ToSafeValue(value){const type=typeof value;if(type==="number"||type==="string")return value;else if(type==="boolean")return value?1:0;else return 0}_GetSafeValue(str){return this._ToSafeValue(this._GetValue(str))}_HasKey(str){const path=
-this._ParsePath(str);if(!path.length)return false;const key=path.pop();const obj=this._GetValueAtFullPath(path,false);if(Array.isArray(obj)){const index=parseInt(key,10);return index>=0&&index<obj.length}else if(typeof obj==="object"&&obj!==null)return obj.hasOwnProperty(key);else return false}_SetValue(str,value){const path=this._ParsePath(str);if(!path.length)return false;if(this._HasValueCache(path,true))this._InvalidateValueCache();const key=path.pop();const obj=this._GetValueAtFullPath(path,
-true);if(Array.isArray(obj)){const index=parseInt(key,10);if(!isFinite(index)||index<0||index>=obj.length)return false;obj[index]=value;return true}else if(typeof obj==="object"&&obj!==null){obj[key]=value;return true}return false}_DeleteKey(str){const path=this._ParsePath(str);if(!path.length)return false;if(this._HasValueCache(path,true))this._InvalidateValueCache();const key=path.pop();const obj=this._GetValueAtFullPath(path,false);if(Array.isArray(obj))return false;else if(typeof obj==="object"&&
-obj!==null){delete obj[key];return true}else return false}SaveToJson(){return{"path":this._path,"data":this._data}}LoadFromJson(o){this._InvalidateValueCache();this._InvalidateLocationCache();this._path=o["path"];this._data=o["data"]}_SanitizeValue(val){const type=typeof val;if(type==="number"){if(!isFinite(val))return 0;return val}if(typeof val=="object")return JSON.stringify(val);return val+""}GetDebuggerProperties(){const prefix="plugins.json.debugger";let topLevelData;try{topLevelData=this._SanitizeValue(this._data)}catch(e){topLevelData=
-'"invalid"'}return[{title:prefix+".title",properties:[{name:prefix+".data",value:topLevelData,onedit:v=>{try{const n=JSON.parse(v);this._SetData(n)}catch(e){}}},{name:prefix+".path",value:this._path.map(seg=>seg.replace(/\./g,"\\.")).join(".")}]}]}GetScriptInterfaceClass(){return self.IJSONInstance}};const map=new WeakMap;self.IJSONInstance=class IJSONInstance extends IInstance{constructor(){super();map.set(this,IInstance._GetInitInst().GetSdkInstance())}getJsonDataCopy(){const data=map.get(this)._GetData();
-return JSON.parse(JSON.stringify(data))}setJsonDataCopy(o){try{const o2=JSON.parse(JSON.stringify(o));map.get(this)._SetData(o2)}catch(err){console.error("[JSON plugin] setJsonData: object is not valid JSON: ",err);throw err;}}setJsonString(str){C3X.RequireString(str);try{const o=JSON.parse(str);map.get(this)._SetData(o)}catch(err){console.error("[JSON plugin] setJsonString: string is not valid JSON: ",err);throw err;}}toCompactString(){return JSON.stringify(map.get(this)._GetData())}toBeautifiedString(){return JSON.stringify(map.get(this)._GetData(),
-null,4)}}}
-{const C3=self.C3;const JSON_TYPES=["null","boolean","number","string","object","array"];C3.Plugins.Json.Cnds={HasKey(str){return this._HasKey(str)},CompareType(str,typeIndex){return this._GetTypeOf(str)===JSON_TYPES[typeIndex]},CompareValue(str,cmp,value){return C3.compare(this._GetSafeValue(str),cmp,value)},IsBooleanSet(str){return this._GetValue(str)===true},ForEach(str){const value=this._GetValue(str);if(typeof value!=="object"||value===null)return false;const runtime=this._runtime;const eventSheetManager=
-runtime.GetEventSheetManager();const currentEvent=runtime.GetCurrentEvent();const solModifiers=currentEvent.GetSolModifiers();const eventStack=runtime.GetEventStack();const oldFrame=eventStack.GetCurrentStackFrame();const newFrame=eventStack.Push(currentEvent);const oldPath=this._path;const oldKey=this._currentKey;const oldValue=this._currentValue;const subPath=this._ParsePathUnsafe(str);runtime.SetDebuggingEnabled(false);for(const [k,v]of Object.entries(value)){this._path=C3.cloneArray(subPath);
-this._path.push(k);this._currentKey=k;this._currentValue=v;eventSheetManager.PushCopySol(solModifiers);currentEvent.Retrigger(oldFrame,newFrame);eventSheetManager.PopSol(solModifiers)}runtime.SetDebuggingEnabled(true);this._path=oldPath;this._InvalidateLocationCache();this._currentKey=oldKey;this._currentValue=oldValue;eventStack.Pop();return false},OnParseError(){return true}}}
-{const C3=self.C3;C3.Plugins.Json.Acts={Parse(str){try{this._SetData(JSON.parse(str))}catch(err){console.warn("[JSON plugin] Failed to parse JSON data: ",err);this._SetData({});this.Trigger(C3.Plugins.Json.Cnds.OnParseError)}},SetPath(str){this._SetPath(str)},SetValue(str,value){this._SetValue(str,value)},SetArray(str,size){let value=this._GetValue(str);if(Array.isArray(value))C3.resizeArray(value,size,0);else{value=[];C3.extendArray(value,size,0);this._SetValue(str,value)}},SetObject(str){this._SetValue(str,
-{})},SetJSON(location,value){let obj=null;try{obj=JSON.parse(value)}catch(err){console.warn("[JSON plugin] Failed to parse JSON data: ",err);this.Trigger(C3.Plugins.Json.Cnds.OnParseError)}this._SetValue(location,obj)},SetNull(str){this._SetValue(str,null)},SetBoolean(str,value){this._SetValue(str,value!==0)},ToggleBoolean(str){const value=this._GetValue(str);if(typeof value==="boolean")this._SetValue(str,!value)},AddTo(str,inc){const value=this._GetValue(str);if(typeof value==="number")this._SetValue(str,
-value+inc)},SubtractFrom(str,dec){const value=this._GetValue(str);if(typeof value==="number")this._SetValue(str,value-dec)},DeleteKey(str){this._DeleteKey(str)},PushValue(side,str,value){const parent=this._GetValue(str);if(Array.isArray(parent))side===0?parent.push(value):parent.unshift(value)},PopValue(side,str){const parent=this._GetValue(str);if(Array.isArray(parent))side===0?parent.pop():parent.shift()},InsertValue(value,str,index){const parent=this._GetValue(str);if(Array.isArray(parent))parent.splice(index,
-0,value)},RemoveValues(count,str,index){const parent=this._GetValue(str);if(Array.isArray(parent))parent.splice(index,count)}}}
-{const C3=self.C3;C3.Plugins.Json.Exps={ToCompactString(){try{return JSON.stringify(this._data)}catch(err){return""}},ToBeautifiedString(){try{return JSON.stringify(this._data,null,4)}catch(err){return""}},Get(str){return this._GetSafeValue(str)},GetAsCompactString(str){const value=this._GetValue(str);return JSON.stringify(value)},GetAsBeautifiedString(str){const value=this._GetValue(str);return JSON.stringify(value,null,4)},Front(str){const parent=this._GetValue(str);if(Array.isArray(parent)){const value=
-parent[0];return this._ToSafeValue(value)}else return-1},Back(str){const parent=this._GetValue(str);if(Array.isArray(parent)){const value=parent.at(-1);return this._ToSafeValue(value)}else return-1},Type(str){return this._GetTypeOf(str)},ArraySize(str){const value=this._GetValue(str);if(Array.isArray(value))return value.length;else return-1},Path(){return this._path.map(seg=>seg.replace(/\./g,"\\.")).join(".")},CurrentKey(){return this._currentKey},CurrentValue(){return this._ToSafeValue(this._currentValue)},
-CurrentType(){return this._JSONTypeOf(this._currentValue)}}};
+'use strict';{const C3=self.C3;C3.Plugins.SpeechRecognition=class SpeechRecognitionPlugin extends C3.SDKPluginBase{constructor(opts){super(opts)}Release(){super.Release()}}}{const C3=self.C3;C3.Plugins.SpeechRecognition.Type=class SpeechRecognitionType extends C3.SDKTypeBase{constructor(objectClass){super(objectClass)}Release(){super.Release()}OnCreate(){}}}
+{const C3=self.C3;const DOM_COMPONENT_ID="speech-recognition";C3.Plugins.SpeechRecognition.Instance=class SpeechRecognitionInstance extends C3.SDKInstanceBase{constructor(inst,properties){super(inst,DOM_COMPONENT_ID);this._isSupported=false;this._interimTranscript="";this._finalTranscript="";this._isRecognisingSpeech=false;this._errorMessage="";this.AddDOMMessageHandler("start",()=>this._OnStart());this.AddDOMMessageHandler("end",()=>this._OnEnd());this.AddDOMMessageHandler("error",err=>this._OnError(err));
+this.AddDOMMessageHandler("result",e=>this._OnResult(e));this._runtime.AddLoadPromise(this.PostToDOMAsync("get-supported").then(data=>{this._isSupported=data["isSupported"]}))}Release(){super.Release()}async _OnStart(){this._isRecognisingSpeech=true;await this.TriggerAsync(C3.Plugins.SpeechRecognition.Cnds.OnSpeechRecognitionStart)}async _OnEnd(){this._isRecognisingSpeech=false;await this.TriggerAsync(C3.Plugins.SpeechRecognition.Cnds.OnSpeechRecognitionEnd)}async _OnError(err){this._isRecognisingSpeech=
+false;this._errorMessage=err["message"];await this.TriggerAsync(C3.Plugins.SpeechRecognition.Cnds.OnSpeechRecognitionError)}async _OnResult(e){this._interimTranscript="";this._finalTranscript+=e["final"];this._interimTranscript+=e["interim"];await this.TriggerAsync(C3.Plugins.SpeechRecognition.Cnds.OnSpeechRecognitionResult)}GetDebuggerProperties(){const prefix="plugins.speechrecognition";return[{title:prefix+".name",properties:[{name:prefix+".debugger.is-recognising-speech",value:this._isRecognisingSpeech},
+{name:prefix+".debugger.last-error",value:this._errorMessage},{name:prefix+".debugger.interim-transcript",value:this._interimTranscript},{name:prefix+".debugger.final-transcript",value:this._finalTranscript}]}]}}}{const C3=self.C3;C3.Plugins.SpeechRecognition.Cnds={SupportsSpeechRecognition(){return this._isSupported},OnSpeechRecognitionStart(){return true},OnSpeechRecognitionEnd(){return true},OnSpeechRecognitionError(){return true},OnSpeechRecognitionResult(){return true},IsRecognisingSpeech(){return this._isRecognisingSpeech}}}
+{const C3=self.C3;C3.Plugins.SpeechRecognition.Acts={RequestSpeechRecognition(lang,mode,results){if(!this._isSupported)return;this._isRecognisingSpeech=false;this._interimTranscript="";this._finalTranscript="";this._PostToDOMMaybeSync("request-speech-recognition",{"lang":lang,"continuous":mode===0,"interimResults":results===0})},StopSpeechRecognition(){if(!this._isSupported)return;this._isRecognisingSpeech=false;this.PostToDOM("stop-speech-recognition")}}}
+{const C3=self.C3;C3.Plugins.SpeechRecognition.Exps={FinalTranscript(){return this._finalTranscript},InterimTranscript(){return this._interimTranscript},SpeechError(){return this._errorMessage}}};
+
+}
+
+{
+'use strict';{const C3=self.C3;C3.Plugins.Arr=class ArrayPlugin extends C3.SDKPluginBase{constructor(opts){super(opts)}Release(){super.Release()}}}{const C3=self.C3;C3.Plugins.Arr.Type=class ArrayType extends C3.SDKTypeBase{constructor(objectClass){super(objectClass)}Release(){super.Release()}OnCreate(){}}}
+{const C3=self.C3;const C3X=self.C3X;const IInstance=self.IInstance;function ResizeArray(arr,len,data){if(len<arr.length)C3.truncateArray(arr,len);else if(len>arr.length)if(typeof data==="function")for(let i=arr.length;i<len;++i)arr.push(data());else for(let i=arr.length;i<len;++i)arr.push(data)}C3.Plugins.Arr.Instance=class ArrayInstance extends C3.SDKInstanceBase{constructor(inst,properties){super(inst);this._cx=10;this._cy=1;this._cz=1;this._arr=null;this._forX=[];this._forY=[];this._forZ=[];this._forDepth=
+-1;if(properties){this._cx=properties[0];this._cy=properties[1];this._cz=properties[2]}this._arr=C3.MakeFilledArray(this._cx,()=>C3.MakeFilledArray(this._cy,()=>C3.MakeFilledArray(this._cz,0)))}Release(){this._arr=null;super.Release()}At(x,y,z){x=Math.floor(x);y=Math.floor(y);z=Math.floor(z);if(x>=0&&x<this._cx&&y>=0&&y<this._cy&&z>=0&&z<this._cz)return this._arr[x][y][z];else return 0}Set(x,y,z,val){x=Math.floor(x);y=Math.floor(y);z=Math.floor(z);if(x>=0&&x<this._cx&&y>=0&&y<this._cy&&z>=0&&z<this._cz)this._arr[x][y][z]=
+val}SetSize(w,h,d){w=Math.floor(w);h=Math.floor(h);d=Math.floor(d);if(w<0)w=0;if(h<0)h=0;if(d<0)d=0;if(this._cx===w&&this._cy===h&&this._cz===d)return;this._cx=w;this._cy=h;this._cz=d;const arr=this._arr;ResizeArray(arr,w,()=>C3.MakeFilledArray(h,()=>C3.MakeFilledArray(d,0)));for(let x=0;x<w;++x){ResizeArray(arr[x],h,()=>C3.MakeFilledArray(d,0));for(let y=0;y<h;++y)ResizeArray(arr[x][y],d,0)}}GetWidth(){return this._cx}GetHeight(){return this._cy}GetDepth(){return this._cz}GetDebuggerProperties(){const prefix=
+"plugins.arr.debugger";const propsPrefix="plugins.arr.properties";const ret=[{title:prefix+".array-properties.title",properties:[{name:propsPrefix+".width.name",value:this._cx,onedit:v=>this.SetSize(v,this._cy,this._cz)},{name:propsPrefix+".height.name",value:this._cy,onedit:v=>this.SetSize(this._cx,v,this._cz)},{name:propsPrefix+".depth.name",value:this._cz,onedit:v=>this.SetSize(this._cx,this._cy,v)},{name:propsPrefix+".elements.name",value:this._cx*this._cy*this._cz}]}];const dataProps=[];if(this._cy===
+1&&this._cz===1)for(let x=0;x<this._cx;++x)dataProps.push({name:"$"+x,value:this._arr[x][0][0],onedit:v=>this._arr[x][0][0]=v});else for(let x=0;x<this._cx;++x)dataProps.push({name:"$"+x,value:this._arr[x].toString()});if(dataProps.length)ret.push({title:prefix+".array-data.title",properties:dataProps});return ret}GetAsJsonString(){return JSON.stringify({"c2array":true,"size":[this._cx,this._cy,this._cz],"data":this._arr})}SaveToJson(){return{"size":[this._cx,this._cy,this._cz],"data":this._arr}}LoadFromJson(o){const sz=
+o["size"];this._cx=sz[0];this._cy=sz[1];this._cz=sz[2];this._arr=o["data"]}_GetForX(){if(this._forDepth>=0&&this._forDepth<this._forX.length)return this._forX[this._forDepth];else return 0}_GetForY(){if(this._forDepth>=0&&this._forDepth<this._forY.length)return this._forY[this._forDepth];else return 0}_GetForZ(){if(this._forDepth>=0&&this._forDepth<this._forZ.length)return this._forZ[this._forDepth];else return 0}GetScriptInterfaceClass(){return self.IArrayInstance}};const map=new WeakMap;self.IArrayInstance=
+class IArrayInstance extends IInstance{constructor(){super();map.set(this,IInstance._GetInitInst().GetSdkInstance())}get width(){return map.get(this).GetWidth()}get height(){return map.get(this).GetHeight()}get depth(){return map.get(this).GetDepth()}setSize(w,h=1,d=1){C3X.RequireFiniteNumber(w);C3X.RequireFiniteNumber(h);C3X.RequireFiniteNumber(d);map.get(this).SetSize(w,h,d)}getAt(x,y=0,z=0){C3X.RequireFiniteNumber(x);C3X.RequireFiniteNumber(y);C3X.RequireFiniteNumber(z);return map.get(this).At(x,
+y,z)}setAt(val,x,y=0,z=0){C3X.RequireFiniteNumber(x);C3X.RequireFiniteNumber(y);C3X.RequireFiniteNumber(z);if(typeof val!=="number"&&typeof val!=="string")throw new TypeError("invalid type");map.get(this).Set(x,y,z,val)}}}
+{const C3=self.C3;function DoForEachTrigger(eventSheetManager,currentEvent,solModifiers,oldFrame,newFrame){eventSheetManager.PushCopySol(solModifiers);currentEvent.Retrigger(oldFrame,newFrame);eventSheetManager.PopSol(solModifiers)}C3.Plugins.Arr.Cnds={CompareX(x,cmp,val){return C3.compare(this.At(x,0,0),cmp,val)},CompareXY(x,y,cmp,val){return C3.compare(this.At(x,y,0),cmp,val)},CompareXYZ(x,y,z,cmp,val){return C3.compare(this.At(x,y,z),cmp,val)},ArrForEach(dims){const runtime=this._runtime;const eventSheetManager=
+runtime.GetEventSheetManager();const currentEvent=runtime.GetCurrentEvent();const solModifiers=currentEvent.GetSolModifiers();const eventStack=runtime.GetEventStack();const oldFrame=eventStack.GetCurrentStackFrame();const newFrame=eventStack.Push(currentEvent);const forDepth=++this._forDepth;const forX=this._forX;const forY=this._forY;const forZ=this._forZ;const cx=this._cx;const cy=this._cy;const cz=this._cz;if(forDepth===this._forX.length){forX.push(0);forY.push(0);forZ.push(0)}else{forX[forDepth]=
+0;forY[forDepth]=0;forZ[forDepth]=0}runtime.SetDebuggingEnabled(false);if(dims===0)for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)for(let z=0;z<cz;++z){forX[forDepth]=x;forY[forDepth]=y;forZ[forDepth]=z;DoForEachTrigger(eventSheetManager,currentEvent,solModifiers,oldFrame,newFrame)}else if(dims===1)for(let x=0;x<cx;++x)for(let y=0;y<cy;++y){forX[forDepth]=x;forY[forDepth]=y;DoForEachTrigger(eventSheetManager,currentEvent,solModifiers,oldFrame,newFrame)}else for(let x=0;x<cx;++x){forX[forDepth]=x;DoForEachTrigger(eventSheetManager,
+currentEvent,solModifiers,oldFrame,newFrame)}runtime.SetDebuggingEnabled(true);this._forDepth--;eventStack.Pop();return false},CompareCurrent(cmp,val){return C3.compare(this.At(this._GetForX(),this._GetForY(),this._GetForZ()),cmp,val)},Contains(val){const cx=this._cx;const cy=this._cy;const cz=this._cz;const arr=this._arr;for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)for(let z=0;z<cz;++z)if(arr[x][y][z]===val)return true;return false},IsEmpty(){return this._cx===0||this._cy===0||this._cz===0},CompareSize(axis,
+cmp,val){let s=0;switch(axis){case 0:s=this._cx;break;case 1:s=this._cy;break;case 2:s=this._cz;break}return C3.compare(s,cmp,val)}}}
+{const C3=self.C3;function CompareValues(va,vb){if(typeof va==="number"&&typeof vb==="number")return va-vb;else{const sa=va.toString();const sb=vb.toString();if(sa<sb)return-1;else if(sa>sb)return 1;else return 0}}C3.Plugins.Arr.Acts={Clear(v){const cx=this._cx;const cy=this._cy;const cz=this._cz;const arr=this._arr;for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)for(let z=0;z<cz;++z)arr[x][y][z]=v},SetSize(w,h,d){this.SetSize(w,h,d)},SetX(x,val){this.Set(x,0,0,val)},SetXY(x,y,val){this.Set(x,y,0,val)},
+SetXYZ(x,y,z,val){this.Set(x,y,z,val)},Push(where,value,axis){const cx=this._cx;const cy=this._cy;const cz=this._cz;const arr=this._arr;if(axis===0){const add=C3.MakeFilledArray(cy,()=>C3.MakeFilledArray(cz,value));if(where===0)arr.push(add);else arr.unshift(add);this._cx++}else if(axis===1){for(let x=0;x<cx;++x){const add=C3.MakeFilledArray(cz,value);if(where===0)arr[x].push(add);else arr[x].unshift(add)}this._cy++}else{for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)if(where===0)arr[x][y].push(value);
+else arr[x][y].unshift(value);this._cz++}},Pop(where,axis){const cx=this._cx;const cy=this._cy;const cz=this._cz;const arr=this._arr;if(axis===0){if(cx===0)return;if(where===0)arr.pop();else arr.shift();this._cx--}else if(axis===1){if(cy===0)return;for(let x=0;x<cx;++x)if(where===0)arr[x].pop();else arr[x].shift();this._cy--}else{if(cz===0)return;for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)if(where===0)arr[x][y].pop();else arr[x][y].shift();this._cz--}},Reverse(axis){const cx=this._cx;const cy=this._cy;
+const cz=this._cz;const arr=this._arr;if(cx===0||cy===0||cz===0)return;if(axis===0)arr.reverse();else if(axis===1)for(let x=0;x<cx;++x)arr[x].reverse();else for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)arr[x][y].reverse()},Sort(axis){const cx=this._cx;const cy=this._cy;const cz=this._cz;const arr=this._arr;if(cx===0||cy===0||cz===0)return;if(axis===0)arr.sort((a,b)=>CompareValues(a[0][0],b[0][0]));else if(axis===1)for(let x=0;x<cx;++x)arr[x].sort((a,b)=>CompareValues(a[0],b[0]));else for(let x=0;x<cx;++x)for(let y=
+0;y<cy;++y)arr[x][y].sort(CompareValues)},Delete(index,axis){index=Math.floor(index);if(index<0)return;const cx=this._cx;const cy=this._cy;const cz=this._cz;const arr=this._arr;if(axis===0){if(index>=cx)return;arr.splice(index,1);this._cx--}else if(axis===1){if(index>=cy)return;for(let x=0;x<cx;++x)arr[x].splice(index,1);this._cy--}else{if(index>=cz)return;for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)arr[x][y].splice(index,1);this._cz--}},Insert(value,index,axis){index=Math.floor(index);if(index<0)return;
+const cx=this._cx;const cy=this._cy;const cz=this._cz;const arr=this._arr;if(axis===0){if(index>cx)return;arr.splice(index,0,C3.MakeFilledArray(cy,()=>C3.MakeFilledArray(cz,value)));this._cx++}else if(axis===1){if(index>cy)return;for(let x=0;x<cx;++x)arr[x].splice(index,0,C3.MakeFilledArray(cz,value));this._cy++}else{if(index>cz)return;for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)arr[x][y].splice(index,0,value);this._cz++}},JSONLoad(json){let o=null;try{o=JSON.parse(json)}catch(err){console.error("[Construct] Failed to parse JSON: ",
+err);return}if(!o["c2array"])return;const sz=o["size"];this._cx=sz[0];this._cy=sz[1];this._cz=sz[2];this._arr=o["data"]},JSONDownload(filename){const url=URL.createObjectURL(new Blob([this.GetAsJsonString()],{type:"application/json"}));this._runtime.InvokeDownload(url,filename)}}}
+{const C3=self.C3;C3.Plugins.Arr.Exps={At(x,y,z){return this.At(x,y||0,z||0)},Width(){return this._cx},Height(){return this._cy},Depth(){return this._cz},CurX(){return this._GetForX()},CurY(){return this._GetForY()},CurZ(){return this._GetForZ()},CurValue(){return this.At(this._GetForX(),this._GetForY(),this._GetForZ())},Front(){return this.At(0,0,0)},Back(){return this.At(this._cx-1,0,0)},IndexOf(v){const arr=this._arr;for(let x=0,len=this._cx;x<len;++x)if(arr[x][0][0]===v)return x;return-1},LastIndexOf(v){const arr=
+this._arr;for(let x=this._cx-1;x>=0;--x)if(arr[x][0][0]===v)return x;return-1},AsJSON(){return this.GetAsJsonString()}}};
 
 }
 
@@ -4047,12 +3975,9 @@ self.C3_GetObjectRefTable = function () {
 		C3.Plugins.TiledBg,
 		C3.Plugins.Spritefont2,
 		C3.Plugins.Text,
-		C3.Plugins.UserMedia,
-		C3.Plugins.GameRecorder,
-		C3.Plugins.Date,
-		C3.Plugins.BinaryData,
 		C3.Plugins.AJAX,
-		C3.Plugins.Json,
+		C3.Plugins.SpeechRecognition,
+		C3.Plugins.Arr,
 		C3.Plugins.System.Cnds.OnLayoutStart,
 		C3.Plugins.System.Acts.SetVar,
 		C3.Plugins.Browser.Exps.QueryParam,
@@ -4060,40 +3985,28 @@ self.C3_GetObjectRefTable = function () {
 		C3.Plugins.Sprite.Acts.SetSize,
 		C3.Plugins.Sprite.Acts.SetBoolInstanceVar,
 		C3.Behaviors.Tween.Acts.TweenTwoProperties,
-		C3.Plugins.Json.Acts.SetValue,
-		C3.Plugins.Json.Acts.SetArray,
-		C3.Plugins.System.Cnds.For,
-		C3.Plugins.Json.Acts.SetPath,
-		C3.Plugins.System.Exps.loopindex,
-		C3.Plugins.Json.Acts.SetObject,
-		C3.Plugins.Json.Exps.Path,
-		C3.Plugins.Browser.Acts.ConsoleLog,
-		C3.Plugins.Json.Exps.ToBeautifiedString,
-		C3.Plugins.GameRecorder.Cnds.SupportsRecording,
-		C3.Plugins.UserMedia.Acts.GetMediaSources,
-		C3.Plugins.System.Acts.WaitForPreviousActions,
-		C3.Plugins.System.Cnds.Compare,
-		C3.Plugins.UserMedia.Exps.AudioSourceCount,
-		C3.Plugins.UserMedia.Acts.RequestMic,
-		C3.Plugins.UserMedia.Exps.AudioSourceLabelAt,
+		C3.Plugins.SpeechRecognition.Cnds.SupportsSpeechRecognition,
 		C3.Plugins.System.Cnds.Else,
-		C3.Plugins.Audio.Acts.AddMuteEffect,
-		C3.Plugins.UserMedia.Cnds.OnApproved,
-		C3.Plugins.UserMedia.Cnds.OnDeclined,
 		C3.Plugins.Touch.Cnds.OnTapGestureObject,
 		C3.Plugins.System.Cnds.CompareBoolVar,
 		C3.Behaviors.Tween.Cnds.OnTweensFinished,
 		C3.Plugins.video.Acts.Play,
+		C3.Plugins.System.Cnds.Compare,
 		C3.Plugins.video.Exps.PlaybackTime,
 		C3.Plugins.Sprite.Cnds.IsBoolInstanceVarSet,
 		C3.Plugins.System.Acts.GoToLayout,
 		C3.Plugins.System.Cnds.PickAll,
 		C3.Plugins.Sprite.Acts.SetAnimFrame,
+		C3.Plugins.Arr.Cnds.ArrForEach,
+		C3.Plugins.Arr.Cnds.CompareCurrent,
+		C3.Plugins.System.Acts.AddVar,
+		C3.Plugins.Browser.Acts.ConsoleLog,
 		C3.Plugins.AJAX.Acts.SetHeader,
 		C3.Plugins.AJAX.Acts.Post,
 		C3.Plugins.System.Cnds.ForEachOrdered,
 		C3.Plugins.Sprite.Exps.X,
 		C3.Plugins.System.Acts.Wait,
+		C3.Plugins.System.Exps.loopindex,
 		C3.Plugins.System.Cnds.PickLastCreated,
 		C3.Plugins.Audio.Acts.Preload,
 		C3.Plugins.TiledBg.Acts.SetWidth,
@@ -4111,26 +4024,17 @@ self.C3_GetObjectRefTable = function () {
 		C3.Plugins.Spritefont2.Acts.SetText,
 		C3.Plugins.System.Exps.int,
 		C3.Behaviors.Tween.Exps.Value,
-		C3.Plugins.GameRecorder.Cnds.IsRecording,
-		C3.Plugins.GameRecorder.Acts.StopRecording,
-		C3.Plugins.GameRecorder.Cnds.OnRecordingReady,
-		C3.Plugins.System.Exps.mid,
-		C3.Plugins.Date.Exps.ToLocaleDateString,
-		C3.Plugins.Date.Exps.Now,
-		C3.Plugins.Date.Exps.ToTimeString,
-		C3.Plugins.Browser.Acts.InvokeDownload,
-		C3.Plugins.GameRecorder.Exps.RecordingURL,
-		C3.Plugins.GameRecorder.Exps.RecordingFileExtension,
-		C3.Plugins.AJAX.Acts.SetResponseBinary,
-		C3.Plugins.AJAX.Acts.Request,
-		C3.Plugins.BinaryData.Exps.GetBase64,
-		C3.Plugins.Json.Acts.DeleteKey,
-		C3.Plugins.Browser.Acts.ExecJs,
+		C3.Plugins.SpeechRecognition.Cnds.IsRecognisingSpeech,
+		C3.Plugins.SpeechRecognition.Acts.StopSpeechRecognition,
+		C3.Plugins.SpeechRecognition.Cnds.OnSpeechRecognitionEnd,
+		C3.Plugins.SpeechRecognition.Exps.FinalTranscript,
+		C3.Plugins.Arr.Acts.SetX,
 		C3.Plugins.Sprite.Cnds.CompareFrame,
-		C3.Plugins.GameRecorder.Acts.StartUserMediaRecording,
+		C3.Plugins.SpeechRecognition.Acts.RequestSpeechRecognition,
+		C3.Plugins.SpeechRecognition.Cnds.OnSpeechRecognitionStart,
 		C3.Plugins.Text.Cnds.PickDistance,
 		C3.Plugins.Sprite.Exps.Y,
-		C3.Plugins.Text.Exps.Text
+		C3.Plugins.Text.Cnds.CompareText
 	];
 };
 self.C3_JsPropNameTable = [
@@ -4157,15 +4061,12 @@ self.C3_JsPropNameTable = [
 	{button_record: 0},
 	{button_number: 0},
 	{choices_text: 0},
-	{UserMedia: 0},
-	{VideoRecorder: 0},
-	{Date: 0},
-	{BinaryData: 0},
 	{AJAX: 0},
-	{JSON: 0},
+	{SpeechRecognition: 0},
+	{array_score: 0},
 	{user: 0},
-	{mic_access: 0},
-	{timestamp: 0}
+	{score: 0},
+	{speech_supported: 0}
 ];
 }
 
@@ -4274,56 +4175,32 @@ self.C3_ExpressionFuncs = [
 		() => "",
 		() => 1,
 		() => 0.25,
-		() => "game_id",
-		() => 2,
-		() => "answers",
-		() => 24,
-		() => "setup json answers",
-		() => 23,
-		p => {
-			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => and("answers.", f0());
-		},
+		() => "out",
 		p => {
 			const n0 = p._GetNode(0);
 			return () => n0.ExpObject();
 		},
-		p => {
-			const n0 = p._GetNode(0);
-			return () => (n0.ExpObject() + ".question_id");
-		},
-		p => {
-			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => (f0() + 1);
-		},
-		p => {
-			const n0 = p._GetNode(0);
-			return () => (n0.ExpObject() + ".value");
-		},
-		() => -1,
-		() => "mic",
-		p => {
-			const n0 = p._GetNode(0);
-			return () => ("AUDIO SOURCE: " + n0.ExpObject(0));
-		},
-		() => "NO MIC FOUND",
-		() => "RECORDING NOT SUPPORTED",
-		() => "MICROPHONE ACCESS APPROVED",
-		() => "MICROPHONE ACCESS DECLINED",
-		() => "out",
 		() => 30,
 		p => {
 			const n0 = p._GetNode(0);
 			return () => n0.ExpInstVar();
 		},
 		() => "in",
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => and("score: ", v0.GetValue());
+		},
 		() => "Accept",
 		() => "application/json",
 		() => "Content-Type",
 		() => "send-data",
 		p => {
 			const v0 = p._GetNode(0).GetVar();
-			return () => (("https://bdc-results.kiqs.co/api/user/" + v0.GetValue()) + "/answers");
+			return () => (("https://bdc-results.kiqs.co/api/user/" + v0.GetValue()) + "/results");
+		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => (and("{\"game_id\": 2,\"score\":", v0.GetValue()) + "}");
 		},
 		() => "POST",
 		p => {
@@ -4349,189 +4226,116 @@ self.C3_ExpressionFuncs = [
 		() => 6,
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			const f2 = p._GetNode(2).GetBoundMethod();
-			const f3 = p._GetNode(3).GetBoundMethod();
-			const f4 = p._GetNode(4).GetBoundMethod();
-			const f5 = p._GetNode(5).GetBoundMethod();
-			const f6 = p._GetNode(6).GetBoundMethod();
-			const f7 = p._GetNode(7).GetBoundMethod();
-			const f8 = p._GetNode(8).GetBoundMethod();
-			const f9 = p._GetNode(9).GetBoundMethod();
-			const f10 = p._GetNode(10).GetBoundMethod();
-			const f11 = p._GetNode(11).GetBoundMethod();
-			const f12 = p._GetNode(12).GetBoundMethod();
-			const f13 = p._GetNode(13).GetBoundMethod();
-			const f14 = p._GetNode(14).GetBoundMethod();
-			const f15 = p._GetNode(15).GetBoundMethod();
-			const f16 = p._GetNode(16).GetBoundMethod();
-			const f17 = p._GetNode(17).GetBoundMethod();
-			return () => ((((((f0(f1(f2()), 0, 2) + f3(f4(f5()), 3, 2)) + f6(f7(f8()), 6, 4)) + "_") + f9(f10(f11()), 0, 2)) + f12(f13(f14()), 3, 2)) + f15(f16(f17()), 6, 2));
-		},
-		p => {
-			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => f0();
 		},
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("1_1_" + v0.GetValue()) + f1());
-		},
-		() => "answers.0.file",
-		() => "answers.0.value",
-		() => "console.clear();",
+		() => "walk",
+		() => "walk the dog",
+		() => "walk her dog",
+		() => "walked",
+		() => "walked the dog",
+		() => "walked her dog",
+		() => "correct",
+		() => "incorrect",
+		() => "en",
 		() => "record",
-		() => 128,
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("1_2_" + v0.GetValue()) + f1());
-		},
-		() => "answers.1.file",
-		() => "answers.1.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("2_1_" + v0.GetValue()) + f1());
-		},
-		() => "answers.2.file",
-		() => "answers.2.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("2_2_" + v0.GetValue()) + f1());
-		},
-		() => "answers.3.file",
-		() => "answers.3.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("2_3_" + v0.GetValue()) + f1());
-		},
-		() => "answers.4.file",
-		() => "answers.4.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("2_4_" + v0.GetValue()) + f1());
-		},
-		() => "answers.5.file",
-		() => "answers.5.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("3_1_" + v0.GetValue()) + f1());
-		},
-		() => "answers.6.file",
-		() => "answers.6.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("3_2_" + v0.GetValue()) + f1());
-		},
-		() => "answers.7.file",
-		() => "answers.7.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("3_3_" + v0.GetValue()) + f1());
-		},
-		() => "answers.8.file",
-		() => "answers.8.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("3_4_" + v0.GetValue()) + f1());
-		},
-		() => "answers.9.file",
-		() => "answers.9.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("4_1_" + v0.GetValue()) + f1());
-		},
-		() => "answers.10.file",
-		() => "answers.10.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("4_2_" + v0.GetValue()) + f1());
-		},
-		() => "answers.11.file",
-		() => "answers.11.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("4_3_" + v0.GetValue()) + f1());
-		},
-		() => "answers.12.file",
-		() => "answers.12.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("4_4_" + v0.GetValue()) + f1());
-		},
-		() => "answers.13.file",
-		() => "answers.13.value",
-		() => "console.clear()",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("5_1_" + v0.GetValue()) + f1());
-		},
-		() => "answers.14.file",
-		() => "answers.14.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("5_2_" + v0.GetValue()) + f1());
-		},
-		() => "answers.15.file",
-		() => "answers.15.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("5_3_" + v0.GetValue()) + f1());
-		},
-		() => "answers.16.file",
-		() => "answers.16.value",
-		() => "answers.17.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("5_5_" + v0.GetValue()) + f1());
-		},
-		() => "answers.18.file",
-		() => "answers.18.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("5_6_" + v0.GetValue()) + f1());
-		},
-		() => "answers.19.file",
-		() => "answers.19.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("5_7_" + v0.GetValue()) + f1());
-		},
-		() => "answers.20.file",
-		() => "answers.20.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("5_8_" + v0.GetValue()) + f1());
-		},
-		() => "answers.21.file",
-		() => "answers.21.value",
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (("5_9_" + v0.GetValue()) + f1());
-		},
-		() => "answers.22.file",
-		() => "answers.22.value",
-		() => "answers.23.value"
+		() => "2",
+		() => "two",
+		() => "2 childerns",
+		() => "two childerns",
+		() => "2 girls",
+		() => "two girls",
+		() => "Tim",
+		() => 2,
+		() => "10",
+		() => "ten",
+		() => "10 years",
+		() => "ten years",
+		() => "10 years old",
+		() => "ten years old",
+		() => 3,
+		() => "walking",
+		() => "skipping",
+		() => "running",
+		() => 4,
+		() => "scissors ball",
+		() => "scissors and ball",
+		() => "scissors + ball",
+		() => "ball scissors",
+		() => "ball and scissors",
+		() => "ball + scissors",
+		() => "red",
+		() => "the color is red",
+		() => "red color",
+		() => "color red",
+		() => "a box",
+		() => "one box",
+		() => "a box of strawberry",
+		() => "one box of strawberry",
+		() => 7,
+		() => "books",
+		() => "book",
+		() => "a book",
+		() => 8,
+		() => "3",
+		() => "three",
+		() => "3 triangles",
+		() => "three triangles",
+		() => "John's father",
+		() => "John father",
+		() => "father of John",
+		() => 10,
+		() => "bicycle",
+		() => "by bicycle",
+		() => "by his bicycle",
+		() => "his bicycle",
+		() => 11,
+		() => "heart",
+		() => "a heart",
+		() => 12,
+		() => "4",
+		() => "four",
+		() => "4 numbers",
+		() => "four numbers",
+		() => 13,
+		() => "Lily's mother",
+		() => "Lily mother",
+		() => "mother of Lily",
+		() => 14,
+		() => "music",
+		() => "music club",
+		() => 15,
+		() => "5 9",
+		() => "5 + 9",
+		() => "5 and 9",
+		() => "five nine",
+		() => "five + nine",
+		() => "five and nine",
+		() => "9 5",
+		() => "9 + 5",
+		() => "9 and 5",
+		() => "nine five",
+		() => "nine + five",
+		() => "nine and five",
+		() => 16,
+		() => "7",
+		() => 17,
+		() => "Steve’s grandfather",
+		() => "Steve grandfather",
+		() => "grandfather of Steve",
+		() => 18,
+		() => "4 items",
+		() => "four items",
+		() => 19,
+		() => "3 books",
+		() => "three books",
+		() => 20,
+		() => "seven",
+		() => "number seven",
+		() => 21,
+		() => "2 years",
+		() => "two years",
+		() => 22,
+		() => 23
 ];
 
 
